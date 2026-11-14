@@ -273,8 +273,8 @@ final class Ui {
     private static String resolve(String setting) {
         if (!setting.equals("auto")) {
             String requested = setting.replace('_', '-');
-            // Legacy "pt" was Brazilian Portuguese; preserve saved manual language choices.
-            if (requested.equalsIgnoreCase("pt")) requested = "pt-BR";
+            // An unspecified Portuguese locale uses Portugal; Brazil is an explicit pt-BR choice.
+            if (requested.equalsIgnoreCase("pt")) requested = "pt-PT";
             String code = match(requested);
             if (code != null) return code;
         }
@@ -301,6 +301,12 @@ final class Ui {
         for (String code : all) if (code.equalsIgnoreCase(tag)) return code;
         int dash = tag.indexOf('-');
         String lang = base(dash < 0 ? tag : tag.substring(0, dash));
+        // Unlisted Portuguese regions (Angola, Mozambique, Cape Verde…) use pt-PT, not
+        // whichever Portuguese catalogue happens to come first in the sorted list.
+        if (lang.equals("pt")) {
+            String wanted = "BR".equalsIgnoreCase(Locale.forLanguageTag(tag).getCountry()) ? "pt-BR" : "pt-PT";
+            for (String code : all) if (code.equalsIgnoreCase(wanted)) return code;
+        }
         for (String code : all) {
             int d = code.indexOf('-');
             if ((d < 0 ? code : code.substring(0, d)).equalsIgnoreCase(lang)) return code;

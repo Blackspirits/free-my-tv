@@ -257,8 +257,8 @@ var I18N = (function () {
   function resolve(setting) {
     if (setting && setting !== 'auto') {
       var requested = setting.replace('_', '-');
-      // Existing saved "pt" means pt-BR.
-      if (requested.toLowerCase() === 'pt') requested = 'pt-BR';
+      // An unspecified Portuguese locale means Portugal; Brazil remains explicit.
+      if (requested.toLowerCase() === 'pt') requested = 'pt-PT';
       var code = match(requested);
       if (code) return code;
     }
@@ -277,6 +277,11 @@ var I18N = (function () {
   function match(tag) {
     var all = languages(), lower = tag.toLowerCase(), first = base(lower);
     for (var i = 0; i < all.length; i++) if (all[i].toLowerCase() === lower) return all[i];
+    // A non-listed Lusophone region must not fall through to the alphabetically first pt-BR.
+    if (first === 'pt') {
+      var wanted = /(?:^|-)BR(?:-|$)/i.test(tag) ? 'pt-BR' : 'pt-PT';
+      if (has.call(CATALOGUES, wanted)) return wanted;
+    }
     for (var j = 0; j < all.length; j++) if (base(all[j]) === first) return all[j];
     return null;
   }

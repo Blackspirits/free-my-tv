@@ -3,7 +3,7 @@
 
     python3 tools/translate.py                 # extract en.json from the code, report what each language lacks
     python3 tools/translate.py --fill          # also translate the missing strings (needs ANTHROPIC_API_KEY)
-    python3 tools/translate.py --fill --lang pt   # a hand-translated language (HAND): filled only when named
+    python3 tools/translate.py --fill --lang pt-PT   # a hand-translated language (HAND): filled only when named
     python3 tools/translate.py --fill --lang fr --model claude-haiku-5-5
     python3 tools/translate.py --check         # validate all catalogues without writing anything
     python3 tools/translate.py --prune         # also remove keys the code no longer uses

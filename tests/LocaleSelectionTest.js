@@ -20,7 +20,8 @@ function fresh(language) {
 for (const [tv, expected, locale] of [
   ['pt-PT','pt-PT','pt-PT'], ['pt-BR','pt-BR','pt-BR'],
   ['pt','pt-PT','pt-PT'], ['pt-AO','pt-PT','pt-PT'],
-  ['pt-MZ','pt-PT','pt-PT'], ['fr-FR','en','en-US']
+  ['pt-MZ','pt-PT','pt-PT'], ['pt-CV','pt-PT','pt-PT'],
+  ['pt-GW','pt-PT','pt-PT'], ['pt-TL','pt-PT','pt-PT'], ['fr-FR','en','en-US']
 ]) {
   const scope = fresh(tv);
   scope.I18N.set('auto');
@@ -37,8 +38,13 @@ scope.I18N.set('pt-BR');
 assert.strictEqual(scope.I18N.lang, 'pt-BR');
 assert.strictEqual(scope.I18N.tr('Home Screen'), br['Home Screen']);
 assert.strictEqual(scope.I18N.languageName('pt-BR'), 'Português (Brasil)');
-scope.I18N.set('pt'); // previously saved explicit preference
-assert.strictEqual(scope.I18N.lang, 'pt-BR');
+scope.I18N.set('pt'); // generic Portuguese defaults to Portugal
+assert.strictEqual(scope.I18N.lang, 'pt-PT');
+assert.strictEqual(scope.I18N.tr('Home Screen'), pt['Home Screen']);
+for (const region of ['pt-AO', 'pt-MZ', 'pt-CV', 'pt-GW']) {
+  scope.I18N.set(region);
+  assert.strictEqual(scope.I18N.lang, 'pt-PT', region);
+}
 assert.ok(scope.I18N.languages().includes('pt-PT'));
 assert.ok(scope.I18N.languages().includes('pt-BR'));
 assert.ok(!scope.I18N.languages().includes('pt'));

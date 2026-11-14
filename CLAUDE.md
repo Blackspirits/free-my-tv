@@ -361,7 +361,7 @@ entries; its system pieces are in `PROTECTED`. USB debugging opens ADB on 5555 t
   its language (`one`/`few`/`many`/`other` in Russian, Ukrainian, Polish; only `other` in Japanese, Chinese…), and
   ICU's rules pick one. Portuguese (pt-PT and pt-BR), Spanish, German, Russian, Thai and Turkish are protected hand-maintained catalogues: the reference, edited by hand,
   never replaced with machine ones (`--fill` leaves them alone unless `--lang` names one). Dates and numbers use
-  `Ui.locale()`. The previous `pt.json` is now `pt-BR.json`; saved manual `pt` choices stay Brazilian, while Automatic selects pt-BR in Brazil and pt-PT elsewhere.
+  `Ui.locale()`. The previous `pt.json` is now `pt-BR.json`; generic and older saved `pt` choices now select pt-PT (an intentional behavior change), while Automatic selects pt-BR in Brazil and pt-PT elsewhere. Neither GitHub commits nor a fork branch push automatically updates installed TVs.
   Text
   drawn every frame is cached and made again when `Ui.generation` changes. After changing text, run
   `python3 tools/translate.py`: it rebuilds `en.json` from the code and lists what each language lacks; translate those
