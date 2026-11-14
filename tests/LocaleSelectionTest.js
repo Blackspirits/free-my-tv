@@ -1,0 +1,45 @@
+/* Locale regression tests for LG/webOS and Samsung/Tizen; runtime remains ES5. */
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const root = path.resolve(__dirname, '..');
+const source = fs.readFileSync(path.join(root, 'web/strings.js'), 'utf8');
+const en = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/en.json'), 'utf8'));
+const br = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-BR.json'), 'utf8'));
+const pt = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-PT.json'), 'utf8'));
+assert.deepStrictEqual(Object.keys(br).sort(), Object.keys(en).sort());
+assert.deepStrictEqual(Object.keys(pt).sort(), Object.keys(en).sort());
+function fresh(language) {
+  const scope = {window: {I18N_CATALOGUES: {'pt-PT': pt, 'pt-BR': br}}, navigator: {language: language}, document: {documentElement: {}}, Intl: Intl, Date: Date};
+  vm.createContext(scope);
+  vm.runInContext(source, scope, {filename: 'web/strings.js'});
+  return scope;
+}
+for (const [tv, expected, locale] of [
+  ['pt-PT','pt-PT','pt-PT'], ['pt-BR','pt-BR','pt-BR'],
+  ['pt','pt-PT','pt-PT'], ['pt-AO','pt-PT','pt-PT'],
+  ['pt-MZ','pt-PT','pt-PT'], ['fr-FR','en','en-US']
+]) {
+  const scope = fresh(tv);
+  scope.I18N.set('auto');
+  assert.strictEqual(scope.I18N.lang, expected, tv);
+  assert.strictEqual(scope.I18N.locale(), locale, tv);
+  assert.strictEqual(scope.document.documentElement.lang, locale, tv);
+}
+const scope = fresh('en-US');
+scope.I18N.set('pt-PT');
+assert.strictEqual(scope.I18N.lang, 'pt-PT');
+assert.strictEqual(scope.I18N.tr('Home Screen'), pt['Home Screen']);
+assert.strictEqual(scope.I18N.languageName('pt-PT'), 'Português (Portugal)');
+scope.I18N.set('pt-BR');
+assert.strictEqual(scope.I18N.lang, 'pt-BR');
+assert.strictEqual(scope.I18N.tr('Home Screen'), br['Home Screen']);
+assert.strictEqual(scope.I18N.languageName('pt-BR'), 'Português (Brasil)');
+scope.I18N.set('pt'); // previously saved explicit preference
+assert.strictEqual(scope.I18N.lang, 'pt-BR');
+assert.ok(scope.I18N.languages().includes('pt-PT'));
+assert.ok(scope.I18N.languages().includes('pt-BR'));
+assert.ok(!scope.I18N.languages().includes('pt'));
+console.log('Portuguese locale selection: all checks passed.');

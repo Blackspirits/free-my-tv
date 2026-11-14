@@ -201,7 +201,7 @@ final class Prefs {
 
     // MARK: - Language and units
 
-    /** "auto" or a language code as picked ("pt", "fr", "zh-CN"…); Ui.applyLanguage finds its catalogue. */
+    /** "auto" or a language code as picked ("pt-PT", "pt-BR", "fr", "zh-CN"…); Ui.applyLanguage finds its catalogue. */
     static String language() {
         String v = app == null ? Config.LANGUAGE : sp().getString("language", Config.LANGUAGE);
         v = v.trim();

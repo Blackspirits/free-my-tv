@@ -167,7 +167,7 @@ The first values come from `config.properties`, created by the first build (Goog
 | `hide_animation` | Leave cartoons and anime out of the picks; *Cartoons and anime* in Home Settings (under *Picks* on Google TV) changes it on the TV | `false` |
 | `open_in_stremio` | A pick opens on its page in [Stremio](https://www.stremio.com/) when the Stremio app is on the TV, instead of in the app it streams on. The picks stay the same: only from the TV's own apps. Google TV only | `false` |
 | `open_in_nuvio` | The same, in [Nuvio](https://nuvio.tv/) (`com.nuvio.tv`, or `com.nuvio.app` from Google Play). With both apps on the TV and both lines `true`, Nuvio opens. Google TV only | `false` |
-| `language` | `auto` (follows the TV), or a language with a [translation](#translations) (`en`, `pt`, `es`, `de`, `ru`, `fr`, `ja`…) | `auto` |
+| `language` | `auto` (follows the TV), or a language with a [translation](#translations) (`en`, `pt-PT`, `pt-BR`, `es`, `de`, `ru`, `fr`, `ja`…) | `auto` |
 | `show_crypto` | Show Binance crypto prices on home and screensaver | `true` |
 | `currency` | Crypto prices in `USD`, `EUR`, `BRL`… | `USD` |
 | `temperature` | `C`, `F` or `auto` | `auto` |
@@ -353,15 +353,15 @@ The website ([freemytv.io](https://freemytv.io)) is in [`docs/`](docs): plain HT
 
 On Google TV, LG and Samsung, each language is one file, [`app/assets/i18n/<lang>.json`](app/assets/i18n), keyed by the
 English text in the code. *Automatic* follows the TV's language and uses any language that has a file (English otherwise); *Home
-Settings* → *Language* lists them all (Arabic on LG and Samsung only, for now). Today: English, Portuguese, Spanish, German, French, Italian, Dutch, Polish,
+Settings* → *Language* lists them all (Arabic on LG and Samsung only, for now). Today: English, Portuguese (Portugal and Brazil), Spanish, German, French, Italian, Dutch, Polish,
 Swedish, Danish, Norwegian, Finnish, Czech, Slovak, Romanian, Turkish, Russian, Ukrainian, Greek, Japanese, Korean, Simplified
-and Traditional Chinese, Hindi, Indonesian, Vietnamese, Thai and Arabic. Portuguese, Spanish, German, Russian, Thai and Turkish were translated by hand and are the
+and Traditional Chinese, Hindi, Indonesian, Vietnamese, Thai and Arabic. Brazilian Portuguese, Spanish, German, Russian, Thai and Turkish were translated by hand and are the
 reference (fix them by hand); the others were machine-made, and corrections from native speakers are welcome.
 
 - **Add a language:** `python3 tools/translate.py --new ca`, then fill `app/assets/i18n/ca.json` by hand, or with
   `ANTHROPIC_API_KEY` set, `python3 tools/translate.py --fill --lang ca` (only the strings go to the API).
 - **After changing text in the code:** `python3 tools/translate.py` lists what each language lacks; `--fill` translates
-  only that (the hand-translated ones, Portuguese, Spanish, German, Russian, Thai and Turkish, are left for a person
+  only that (the hand-translated ones, Portuguese (both regions), Spanish, German, Russian, Thai and Turkish, are left for a person
   unless `--lang` names them), `--prune` drops strings the code no longer uses.
   Run `python3 tools/translate.py --check` to validate all catalogues without writing files.
 - Text built at runtime has placeholders (`"{n} min ago"`), so each language puts the words in its own order. A key
@@ -373,6 +373,12 @@ reference (fix them by hand); the others were machine-made, and corrections from
   from the right) and numbers are written ٠١٢٣. The Google TV app's layout isn't mirrored yet, so it doesn't offer
   Arabic for now (a TV in Arabic stays in English there). Hebrew and Persian aren't there yet.
 - **Limits:** Chinese, Japanese, Korean, Hindi and Arabic are drawn with the TV's system font (Inter has no such letters).
+
+For Portuguese, choose **Português (Portugal)** (`pt-PT`) or **Português (Brasil)** (`pt-BR`).
+*Automatic* uses `pt-BR` on TVs set to Brazil and `pt-PT` in Portugal and other Portuguese-speaking regions.
+The old saved `pt` setting still means Brazilian Portuguese, to preserve earlier manual preferences.
+The existing Brazilian translations have not changed. The new European Portuguese catalogue is a regional draft awaiting full linguistic review.
+The Portuguese-language website at `docs/pt/` remains the Brazilian page, with its existing URL unchanged.
 
 ## Privacy
 

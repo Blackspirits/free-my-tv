@@ -39,7 +39,7 @@ WEB = os.path.join(ROOT, "web")
 I18N = os.path.join(ROOT, "app", "assets", "i18n")
 CACHE = os.path.join(ROOT, "tools", ".i18n-cache.json")   # translations made with --fill, by hash (not committed)
 DEFAULT_MODEL = "claude-haiku-5-5"
-HAND = {"pt", "es", "de", "ru", "th", "tr"}   # hand translations: --fill leaves them to a person unless --lang names one
+HAND = {"pt-PT", "pt-BR", "es", "de", "ru", "th", "tr"}   # hand translations: --fill leaves them to a person unless --lang names one
 CALL = re.compile(r"\bUi\.(trf?|plural|datePattern)\(")
 WEB_CALL = re.compile(r"(?:(?<![\w.$])|(?<=\bI18N\.))(trf?|plural|formatDate)\(")
 PLURAL_FORM = re.compile(r"^(zero|one|two|few|many|other):")
@@ -282,7 +282,7 @@ def check(en):
 
 # MARK: - Translation (Anthropic Messages API, raw HTTP)
 
-NAMES = {"pt": "Brazilian Portuguese", "es": "Spanish", "de": "German", "fr": "French", "it": "Italian", "nl": "Dutch",
+NAMES = {"pt-PT": "European Portuguese", "pt-BR": "Brazilian Portuguese", "es": "Spanish", "de": "German", "fr": "French", "it": "Italian", "nl": "Dutch",
          "pl": "Polish", "sv": "Swedish", "da": "Danish", "nb": "Norwegian Bokmål", "fi": "Finnish", "cs": "Czech",
          "ro": "Romanian", "tr": "Turkish", "ru": "Russian", "uk": "Ukrainian", "el": "Greek", "ja": "Japanese",
          "ko": "Korean", "zh-CN": "Simplified Chinese", "zh-TW": "Traditional Chinese (Taiwan)", "hi": "Hindi", "id": "Indonesian", "vi": "Vietnamese",
