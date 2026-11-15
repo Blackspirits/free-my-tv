@@ -9,10 +9,18 @@ const source = fs.readFileSync(path.join(root, 'web/strings.js'), 'utf8');
 const en = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/en.json'), 'utf8'));
 const br = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-BR.json'), 'utf8'));
 const pt = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-PT.json'), 'utf8'));
+const fr = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/fr.json'), 'utf8'));
+const es = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/es.json'), 'utf8'));
+const zhCN = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/zh-CN.json'), 'utf8'));
+const zhTW = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/zh-TW.json'), 'utf8'));
 assert.deepStrictEqual(Object.keys(br).sort(), Object.keys(en).sort());
 assert.deepStrictEqual(Object.keys(pt).sort(), Object.keys(en).sort());
+// Include other supported catalogue variants to catch fallback regressions; fr-FR must not become English.
 function fresh(language) {
-  const scope = {window: {I18N_CATALOGUES: {'pt-PT': pt, 'pt-BR': br}}, navigator: {language: language}, document: {documentElement: {}}, Intl: Intl, Date: Date};
+  const scope = {
+    window: {I18N_CATALOGUES: {'pt-PT': pt, 'pt-BR': br, fr: fr, es: es, 'zh-CN': zhCN, 'zh-TW': zhTW}},
+    navigator: {language: language}, document: {documentElement: {}}, Intl: Intl, Date: Date
+  };
   vm.createContext(scope);
   vm.runInContext(source, scope, {filename: 'web/strings.js'});
   return scope;
@@ -21,7 +29,10 @@ for (const [tv, expected, locale] of [
   ['pt-PT','pt-PT','pt-PT'], ['pt-BR','pt-BR','pt-BR'],
   ['pt','pt-PT','pt-PT'], ['pt-AO','pt-PT','pt-PT'],
   ['pt-MZ','pt-PT','pt-PT'], ['pt-CV','pt-PT','pt-PT'],
-  ['pt-GW','pt-PT','pt-PT'], ['pt-TL','pt-PT','pt-PT'], ['fr-FR','en','en-US']
+  ['pt-GW','pt-PT','pt-PT'], ['pt-TL','pt-PT','pt-PT'],
+  ['fr-FR','fr','fr-FR'], ['es-ES','es','es-ES'], ['es-AR','es','es-AR'],
+  ['zh-HK','zh-TW','zh-TW'], ['zh-Hans-HK','zh-CN','zh-CN'],
+  ['eo-EO','en','en-US']
 ]) {
   const scope = fresh(tv);
   scope.I18N.set('auto');
@@ -49,4 +60,11 @@ for (const region of ['pt-AO', 'pt-MZ', 'pt-CV', 'pt-GW']) {
 assert.ok(scope.I18N.languages().includes('pt-PT'));
 assert.ok(scope.I18N.languages().includes('pt-BR'));
 assert.ok(!scope.I18N.languages().includes('pt'));
-console.log('Portuguese locale selection: all checks passed.');
+// A manual choice must always override the TV region.
+const onBrazilianTV = fresh('pt-BR');
+onBrazilianTV.I18N.set('pt-PT');
+assert.strictEqual(onBrazilianTV.I18N.lang, 'pt-PT');
+const onPortugueseTV = fresh('pt-PT');
+onPortugueseTV.I18N.set('pt-BR');
+assert.strictEqual(onPortugueseTV.I18N.lang, 'pt-BR');
+console.log('Regional language selection and non-Portuguese fallbacks: all checks passed.');
