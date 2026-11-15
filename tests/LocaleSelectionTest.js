@@ -115,9 +115,12 @@ for (const [region, label] of [
 ]) {
   const old = boot(region, {language: 'auto'}, {}, true).scope;
   assert.strictEqual(old.I18N.languageName(old.I18N.lang), label, 'no Intl language name: ' + region);
-  assert.strictEqual(old.I18N.plural('plural|one:{n} season|other:{n} seasons', 2), '2 ' + (region === 'pt-BR' ? 'temporadas' : 'temporadas'));
+  assert.strictEqual(old.I18N.plural('plural|one:{n} season|other:{n} seasons', 2), '2 temporadas', 'no Intl plural: ' + region);
   assert.strictEqual(old.I18N.formatDate('format|h:mm a', new Date(2026, 10, 15, 16, 7).getTime()), '16:07', 'no Intl time: ' + region);
   assert.strictEqual(old.I18N.formatDate('format|EEEE, MMMM d', new Date(2026, 10, 15, 16, 7).getTime()),
     'domingo, 15 de novembro', 'no Intl date: ' + region);
 }
+const legacyOldTV = boot('pt-PT', {language: 'pt'}, {}, true);
+assert.strictEqual(legacyOldTV.scope.I18N.lang, 'pt-BR', 'legacy saved pt survives on older TV without Intl');
+assert.strictEqual(legacyOldTV.saved().language, 'pt-BR', 'migration persists even on old TV');
 console.log('Regional language, preference migration and old-TV Intl fallback: all checks passed.');
