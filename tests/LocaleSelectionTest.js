@@ -17,10 +17,10 @@ const zhTW = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/zh-TW.j
 assert.deepStrictEqual(Object.keys(br).sort(), Object.keys(en).sort());
 assert.deepStrictEqual(Object.keys(pt).sort(), Object.keys(en).sort());
 // Include other supported catalogue variants to catch fallback regressions; fr-FR must not become English.
-function fresh(language) {
+function fresh(language, noIntl) {
   const scope = {
     window: {I18N_CATALOGUES: {'pt-PT': pt, 'pt-BR': br, fr: fr, es: es, 'zh-CN': zhCN, 'zh-TW': zhTW}},
-    navigator: {language: language}, document: {documentElement: {}}, Intl: Intl, Date: Date
+    navigator: {language: language}, document: {documentElement: {}}, Intl: noIntl ? undefined : Intl, Date: Date
   };
   vm.createContext(scope);
   vm.runInContext(source, scope, {filename: 'web/strings.js'});
@@ -70,8 +70,8 @@ onPortugueseTV.I18N.set('pt-BR');
 assert.strictEqual(onPortugueseTV.I18N.lang, 'pt-BR');
 // End-to-end boot path: strings.js → data.js (Prefs migration) → I18N.set(Prefs.language()).
 // Unlike a direct I18N.set('pt'), a legacy *saved* pt must retain pt-BR after an upgrade.
-function boot(tvLanguage, savedPrefs, config) {
-  const scope = fresh(tvLanguage);
+function boot(tvLanguage, savedPrefs, config, noIntl) {
+  const scope = fresh(tvLanguage, noIntl);
   let value = savedPrefs === undefined ? null : JSON.stringify(savedPrefs);
   let writes = 0;
   scope.window.CONFIG = config || {};
@@ -105,4 +105,19 @@ const brazil = boot('pt-BR', {language: 'auto'});
 assert.strictEqual(brazil.scope.I18N.lang, 'pt-BR', 'automatic Brazil is Brazilian');
 const explicit = boot('pt-BR', {language: 'pt-PT'});
 assert.strictEqual(explicit.scope.I18N.lang, 'pt-PT', 'explicit Portugal overrides the TV region');
-console.log('Regional language selection, preference migration and non-Portuguese fallbacks: all checks passed.');
+// webOS 3 / Tizen 3: no Intl.PluralRules or Intl.DisplayNames. Use the actual
+// catalogue-driven date-name fallback from web/data.js, not a mocked date list.
+for (const [region, label] of [
+  ['pt-PT', 'Português (Portugal)'],
+  ['pt-BR', 'Português (Brasil)'],
+  ['pt-AO', 'Português (Portugal)'],
+  ['pt-MZ', 'Português (Portugal)']
+]) {
+  const old = boot(region, {language: 'auto'}, {}, true).scope;
+  assert.strictEqual(old.I18N.languageName(old.I18N.lang), label, 'no Intl language name: ' + region);
+  assert.strictEqual(old.I18N.plural('plural|one:{n} season|other:{n} seasons', 2), '2 ' + (region === 'pt-BR' ? 'temporadas' : 'temporadas'));
+  assert.strictEqual(old.I18N.formatDate('format|h:mm a', new Date(2026, 10, 15, 16, 7).getTime()), '16:07', 'no Intl time: ' + region);
+  assert.strictEqual(old.I18N.formatDate('format|EEEE, MMMM d', new Date(2026, 10, 15, 16, 7).getTime()),
+    'domingo, 15 de novembro', 'no Intl date: ' + region);
+}
+console.log('Regional language, preference migration and old-TV Intl fallback: all checks passed.');
