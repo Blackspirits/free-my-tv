@@ -156,7 +156,7 @@
  "No weather data right now.": "Não existem dados meteorológicos disponíveis neste momento.",
  "None of home_assistant_entities can be a button (see the README).": "Nenhuma das entidades de home_assistant_entities pode ser utilizada como botão (consulte o README).",
  "None of the TV's streaming apps can give picks.": "Nenhuma das aplicações de streaming da TV disponibiliza recomendações.",
- "None yet.": "Ainda nenhuma.",
+ "None yet.": "Ainda não há avisos.",
  "Not installed": "Não instalado",
  "Not set": "Não definido",
  "Nothing": "Nada",
