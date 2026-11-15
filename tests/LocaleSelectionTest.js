@@ -6,6 +6,7 @@ const path = require('path');
 const vm = require('vm');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'web/strings.js'), 'utf8');
+const dataSource = fs.readFileSync(path.join(root, 'web/data.js'), 'utf8');
 const en = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/en.json'), 'utf8'));
 const br = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-BR.json'), 'utf8'));
 const pt = JSON.parse(fs.readFileSync(path.join(root, 'app/assets/i18n/pt-PT.json'), 'utf8'));
@@ -67,4 +68,41 @@ assert.strictEqual(onBrazilianTV.I18N.lang, 'pt-PT');
 const onPortugueseTV = fresh('pt-PT');
 onPortugueseTV.I18N.set('pt-BR');
 assert.strictEqual(onPortugueseTV.I18N.lang, 'pt-BR');
-console.log('Regional language selection and non-Portuguese fallbacks: all checks passed.');
+// End-to-end boot path: strings.js → data.js (Prefs migration) → I18N.set(Prefs.language()).
+// Unlike a direct I18N.set('pt'), a legacy *saved* pt must retain pt-BR after an upgrade.
+function boot(tvLanguage, savedPrefs, config) {
+  const scope = fresh(tvLanguage);
+  let value = savedPrefs === undefined ? null : JSON.stringify(savedPrefs);
+  let writes = 0;
+  scope.window.CONFIG = config || {};
+  scope.TV = {zone: function () { return ''; }};
+  scope.XMLHttpRequest = function () {};
+  scope.localStorage = {
+    getItem: function (key) { return key === 'fmtv.prefs' ? value : null; },
+    setItem: function (key, text) {
+      if (key === 'fmtv.prefs') { value = text; writes++; }
+    }
+  };
+  vm.runInContext(dataSource, scope, {filename: 'web/data.js'});
+  scope.I18N.set(scope.Prefs.language());
+  return {scope: scope, saved: function () { return JSON.parse(value); }, writes: writes};
+}
+const legacy = boot('pt-PT', {language: 'pt'});
+assert.strictEqual(legacy.scope.Prefs.language(), 'pt-BR', 'legacy explicit choice is migrated');
+assert.strictEqual(legacy.scope.I18N.lang, 'pt-BR', 'legacy startup still displays Brazilian');
+assert.strictEqual(legacy.scope.I18N.tr('Home Screen'), br['Home Screen']);
+assert.strictEqual(legacy.saved().language, 'pt-BR', 'migration is persisted');
+assert.strictEqual(legacy.writes, 1, 'migration only writes once');
+const upgraded = boot('pt-PT', legacy.saved());
+assert.strictEqual(upgraded.scope.I18N.lang, 'pt-BR', 'Brazilian language persists after restart');
+assert.strictEqual(upgraded.writes, 0, 'already migrated preferences are not rewritten');
+const generic = boot('pt-PT', undefined, {language: 'pt'});
+assert.strictEqual(generic.scope.I18N.lang, 'pt-PT', 'new generic build configuration is European');
+assert.strictEqual(generic.writes, 0, 'generic configuration is not migrated');
+const portugal = boot('pt-AO', {language: 'auto'});
+assert.strictEqual(portugal.scope.I18N.lang, 'pt-PT', 'automatic Angola is European');
+const brazil = boot('pt-BR', {language: 'auto'});
+assert.strictEqual(brazil.scope.I18N.lang, 'pt-BR', 'automatic Brazil is Brazilian');
+const explicit = boot('pt-BR', {language: 'pt-PT'});
+assert.strictEqual(explicit.scope.I18N.lang, 'pt-PT', 'explicit Portugal overrides the TV region');
+console.log('Regional language selection, preference migration and non-Portuguese fallbacks: all checks passed.');
