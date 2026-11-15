@@ -333,7 +333,7 @@ def main():
     ap.add_argument("--fill", action="store_true", help="translate the missing strings (needs ANTHROPIC_API_KEY)")
     ap.add_argument("--prune", action="store_true", help="remove keys the code no longer uses")
     ap.add_argument("--lang", action="append", help="only these languages (repeatable)")
-    ap.add_argument("--new", metavar="LANG", help="create an empty catalogue for LANG (e.g. fr, pt, zh-CN)")
+    ap.add_argument("--new", metavar="LANG", help="create an empty catalogue for LANG (e.g. fr, pt-PT, zh-CN)")
     ap.add_argument("--model", default=os.environ.get("TRANSLATE_MODEL", DEFAULT_MODEL))
     a = ap.parse_args()
 
