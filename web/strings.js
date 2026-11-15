@@ -14,7 +14,7 @@ var I18N = (function () {
   var has = Object.prototype.hasOwnProperty;
 
   /** The usual country for each language's dates and numbers, when the TV itself is in another language. */
-  var REGIONS = {pt: 'BR', es: 'ES', de: 'DE', fr: 'FR', it: 'IT', nl: 'NL', pl: 'PL', sv: 'SE', da: 'DK', nb: 'NO',
+  var REGIONS = {es: 'ES', de: 'DE', fr: 'FR', it: 'IT', nl: 'NL', pl: 'PL', sv: 'SE', da: 'DK', nb: 'NO',
     fi: 'FI', cs: 'CZ', sk: 'SK', ro: 'RO', tr: 'TR', ru: 'RU', uk: 'UA', el: 'GR', ja: 'JP', ko: 'KR', hi: 'IN', id: 'ID', vi: 'VN', th: 'TH',
     ar: 'SA'};
 
@@ -22,7 +22,7 @@ var I18N = (function () {
   var RTL = {ar: true, he: true, fa: true, ur: true};
 
   /** Each language in its own name, for TVs without Intl.DisplayNames (Chromium before 81). */
-  var NAMES = {en: 'English', pt: 'Português', es: 'Español', de: 'Deutsch', fr: 'Français', it: 'Italiano',
+  var NAMES = {en: 'English', 'pt-PT': 'Português (Portugal)', 'pt-BR': 'Português (Brasil)', es: 'Español', de: 'Deutsch', fr: 'Français', it: 'Italiano',
     nl: 'Nederlands', pl: 'Polski', sv: 'Svenska', da: 'Dansk', nb: 'Norsk bokmål', fi: 'Suomi', cs: 'Čeština', sk: 'Slovenčina',
     ro: 'Română', tr: 'Türkçe', ru: 'Русский', uk: 'Українська', el: 'Ελληνικά', ja: '日本語', ko: '한국어',
     'zh-CN': '简体中文', 'zh-TW': '繁體中文', hi: 'हिन्दी', id: 'Indonesia', vi: 'Tiếng Việt', th: 'ไทย', ar: 'العربية'};
@@ -256,19 +256,32 @@ var I18N = (function () {
   /** The catalogue for a setting ("auto", "fr", "pt-BR"…), or for the TV's language with "auto"; else "en". */
   function resolve(setting) {
     if (setting && setting !== 'auto') {
-      var code = match(setting.replace('_', '-'));
+      var requested = setting.replace('_', '-');
+      // An unspecified Portuguese locale means Portugal; Brazil remains explicit.
+      if (requested.toLowerCase() === 'pt') requested = 'pt-PT';
+      var code = match(requested);
       if (code) return code;
     }
     var tv = (navigator.language || 'en').replace('_', '-');
+    // Explicit region before generic language match (which could pick the wrong variant).
+    if (base(tv) === 'pt') {
+      var wanted = /(?:^|-)BR(?:-|$)/i.test(tv) ? 'pt-BR' : 'pt-PT';
+      if (has.call(CATALOGUES, wanted)) return wanted;
+    }
     // Taiwan, Hong Kong and Macau write Traditional Chinese: never the Simplified catalogue there (unless the TV
     // itself is set to Simplified, zh-Hans-HK).
     if (base(tv) === 'zh' && !/-Hans\b/i.test(tv) && /-(Hant|TW|HK|MO)\b/i.test(tv)) return CATALOGUES['zh-TW'] ? 'zh-TW' : 'en';
-    return match(base(tv)) || 'en';
+    return match(tv) || 'en';
   }
 
   function match(tag) {
     var all = languages(), lower = tag.toLowerCase(), first = base(lower);
     for (var i = 0; i < all.length; i++) if (all[i].toLowerCase() === lower) return all[i];
+    // A non-listed Lusophone region must not fall through to the alphabetically first pt-BR.
+    if (first === 'pt') {
+      var wanted = /(?:^|-)BR(?:-|$)/i.test(tag) ? 'pt-BR' : 'pt-PT';
+      if (has.call(CATALOGUES, wanted)) return wanted;
+    }
     for (var j = 0; j < all.length; j++) if (base(all[j]) === first) return all[j];
     return null;
   }
@@ -285,7 +298,6 @@ var I18N = (function () {
    */
   function localeOf(code) {
     if (code === 'en') return 'en-US';
-    if (code === 'pt') return 'pt-BR';
     // Gregorian dates (ar-SA alone gives the Hijri calendar), with the Arabic digits ٠-٩.
     if (code === 'ar') return 'ar-SA-u-ca-gregory-nu-arab';
     if (code.indexOf('-') > 0) return code;

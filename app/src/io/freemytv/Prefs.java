@@ -139,6 +139,7 @@ final class Prefs {
     static void init(Context c) {
         app = c.getApplicationContext();
         migrateKeys();   // before anything reads the button choices
+        migrateLanguage();   // preserve old explicit Brazilian Portuguese choices
         Ui.applyLanguage();   // the language picked on the TV, now that it can be read
     }
 
@@ -201,11 +202,26 @@ final class Prefs {
 
     // MARK: - Language and units
 
-    /** "auto" or a language code as picked ("pt", "fr", "zh-CN"…); Ui.applyLanguage finds its catalogue. */
+    /**
+     * Earlier versions saved manual "pt" for Brazilian Portuguese, the only option.
+     * Preserve that choice on upgrade. A generic "pt" in build configuration still
+     * means European Portuguese, since it is not a saved manual preference.
+     */
+    private static void migrateLanguage() {
+        SharedPreferences settings = sp();
+        if (settings.contains("language") && "pt".equalsIgnoreCase(settings.getString("language", ""))) {
+            settings.edit().putString("language", "pt-BR").apply();
+        }
+    }
+
+    /** "auto" or a language code as picked ("pt-PT", "pt-BR", "fr", "zh-CN"…); Ui.applyLanguage finds its catalogue. */
     static String language() {
         String v = app == null ? Config.LANGUAGE : sp().getString("language", Config.LANGUAGE);
         v = v.trim();
-        return v.isEmpty() || v.equalsIgnoreCase("auto") ? "auto" : v;
+        if (v.isEmpty() || v.equalsIgnoreCase("auto")) return "auto";
+        // Generic "pt" means pt-PT; old saved "pt" is migrated to pt-BR in init().
+        // Normalize here so the picker finds an explicit catalogue.
+        return v.equalsIgnoreCase("pt") ? "pt-PT" : v;
     }
 
     static void setLanguage(String v) { put("language", v); Ui.applyLanguage(); }

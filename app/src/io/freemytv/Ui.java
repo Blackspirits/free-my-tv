@@ -126,7 +126,7 @@ final class Ui {
     private static final Map<String, String> CONTEXT_FREE = new ConcurrentHashMap<>();
     /** The usual country for each language's dates and numbers, when the TV itself is in another language. */
     private static final String[][] REGIONS = {
-        {"pt", "BR"}, {"es", "ES"}, {"de", "DE"}, {"fr", "FR"}, {"it", "IT"}, {"nl", "NL"}, {"pl", "PL"}, {"sv", "SE"},
+        {"es", "ES"}, {"de", "DE"}, {"fr", "FR"}, {"it", "IT"}, {"nl", "NL"}, {"pl", "PL"}, {"sv", "SE"},
         {"da", "DK"}, {"nb", "NO"}, {"fi", "FI"}, {"cs", "CZ"}, {"sk", "SK"}, {"ro", "RO"}, {"tr", "TR"}, {"ru", "RU"}, {"uk", "UA"},
         {"el", "GR"}, {"ja", "JP"}, {"ko", "KR"}, {"hi", "IN"}, {"id", "ID"}, {"vi", "VN"}, {"th", "TH"},
     };
@@ -234,6 +234,8 @@ final class Ui {
     /** The language's own name, capitalized: "Português", "Deutsch", "Français", "日本語". */
     static String languageName(String code) {
         // Both Chinese catalogues are "中文" to Java: the script tells them apart.
+        if (code.equalsIgnoreCase("pt-PT")) return "Português (Portugal)";
+        if (code.equalsIgnoreCase("pt-BR")) return "Português (Brasil)";
         if (code.equalsIgnoreCase("zh-CN")) return "简体中文";
         if (code.equalsIgnoreCase("zh-TW")) return "繁體中文";
         Locale l = Locale.forLanguageTag(code);
@@ -270,11 +272,19 @@ final class Ui {
     /** The catalogue for a setting ("auto", "fr", "pt-BR"…), or for the TV's language with "auto"; else "en". */
     private static String resolve(String setting) {
         if (!setting.equals("auto")) {
-            String code = match(setting.replace('_', '-'));
+            String requested = setting.replace('_', '-');
+            // An unspecified Portuguese locale uses Portugal; Brazil is an explicit pt-BR choice.
+            if (requested.equalsIgnoreCase("pt")) requested = "pt-PT";
+            String code = match(requested);
             if (code != null) return code;
         }
         Locale tv = Locale.getDefault();
         String lang = base(tv.getLanguage());
+        // Automatic Portuguese follows TV region; other Lusophone regions default to Portugal.
+        if (lang.equals("pt")) {
+            String wanted = "BR".equalsIgnoreCase(tv.getCountry()) ? "pt-BR" : "pt-PT";
+            for (String code : languages()) if (code.equalsIgnoreCase(wanted)) return code;
+        }
         // Taiwan, Hong Kong and Macau write Traditional Chinese: never the Simplified catalogue there (unless the TV
         // itself is set to Simplified, zh-Hans-HK).
         if (lang.equals("zh") && !"Hans".equals(tv.getScript()) && ("Hant".equals(tv.getScript()) || "TW".equals(tv.getCountry())
@@ -291,6 +301,12 @@ final class Ui {
         for (String code : all) if (code.equalsIgnoreCase(tag)) return code;
         int dash = tag.indexOf('-');
         String lang = base(dash < 0 ? tag : tag.substring(0, dash));
+        // Unlisted Portuguese regions (Angola, Mozambique, Cape Verde…) use pt-PT, not
+        // whichever Portuguese catalogue happens to come first in the sorted list.
+        if (lang.equals("pt")) {
+            String wanted = "BR".equalsIgnoreCase(Locale.forLanguageTag(tag).getCountry()) ? "pt-BR" : "pt-PT";
+            for (String code : all) if (code.equalsIgnoreCase(wanted)) return code;
+        }
         for (String code : all) {
             int d = code.indexOf('-');
             if ((d < 0 ? code : code.substring(0, d)).equalsIgnoreCase(lang)) return code;
@@ -306,7 +322,6 @@ final class Ui {
 
     private static Locale localeOf(String lang) {
         if (lang.equals("en")) return Locale.US;
-        if (lang.equals("pt")) return new Locale("pt", "BR");
         if (lang.indexOf('-') > 0) return Locale.forLanguageTag(lang);
         Locale tv = Locale.getDefault();
         // The TV's own Spanish (es-MX, es-AR…), German (de-AT)…; a TV in Nynorsk gets the Bokmål text, so Bokmål dates.

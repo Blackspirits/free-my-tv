@@ -1008,7 +1008,7 @@
     return ['auto'].concat(I18N.languages());
   }
 
-  /** The language in use: "auto", or the catalogue the setting resolved to ("pt-BR" in config.properties is "pt"). */
+  /** The language in use: "auto", or the resolved catalogue code ("pt" becomes "pt-PT"). */
   function pickedLanguage() {
     return Prefs.language() === 'auto' ? 'auto' : I18N.lang;
   }

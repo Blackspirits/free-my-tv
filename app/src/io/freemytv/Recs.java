@@ -898,7 +898,7 @@ final class Recs {
     private static String lang() {
         String lang = Ui.language;
         if (lang.equals("en")) return "en-US";
-        if (lang.equals("pt")) return "pt-BR";
+        // Portuguese UI languages have explicit country tags (pt-PT or pt-BR).
         if (lang.equals("es")) return "ES".equals(java.util.Locale.getDefault().getCountry()) ? "es-ES" : "es-MX";
         if (lang.equals("de")) return "de-DE";   // TMDB's de-AT and de-CH have few translations of their own
         if (lang.indexOf('-') > 0) return lang;

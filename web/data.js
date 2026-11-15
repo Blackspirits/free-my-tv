@@ -62,6 +62,12 @@ var Prefs = (function () {
   var v = {};
   try { v = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
   function save() { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} }
+  // Before regional catalogues, manually selected "pt" meant Brazilian Portuguese.
+  // Preserve that saved choice; CONFIG.language='pt' still means generic pt-PT.
+  if (typeof v.language === 'string' && v.language.toLowerCase() === 'pt') {
+    v.language = 'pt-BR';
+    save();
+  }
   function pick(name, fallback) { return v[name] === undefined ? fallback : v[name]; }
   return {
     version: 0,
