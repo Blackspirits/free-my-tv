@@ -40,6 +40,7 @@ assert.strictEqual(scope.I18N.tr('Home Screen'), br['Home Screen']);
 assert.strictEqual(scope.I18N.languageName('pt-BR'), 'Português (Brasil)');
 scope.I18N.set('pt'); // generic Portuguese defaults to Portugal
 assert.strictEqual(scope.I18N.lang, 'pt-PT');
+assert.strictEqual(scope.I18N.languageName('pt-PT'), 'Português (Portugal)');
 assert.strictEqual(scope.I18N.tr('Home Screen'), pt['Home Screen']);
 for (const region of ['pt-AO', 'pt-MZ', 'pt-CV', 'pt-GW']) {
   scope.I18N.set(region);

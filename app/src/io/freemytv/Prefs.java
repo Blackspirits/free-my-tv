@@ -205,7 +205,11 @@ final class Prefs {
     static String language() {
         String v = app == null ? Config.LANGUAGE : sp().getString("language", Config.LANGUAGE);
         v = v.trim();
-        return v.isEmpty() || v.equalsIgnoreCase("auto") ? "auto" : v;
+        if (v.isEmpty() || v.equalsIgnoreCase("auto")) return "auto";
+        // Earlier builds stored plain "pt" for Brazilian Portuguese. With pt-PT as the
+        // generic Portuguese variant, normalize it here so the Settings picker can
+        // find and label the currently selected language, not only load its text.
+        return v.equalsIgnoreCase("pt") ? "pt-PT" : v;
     }
 
     static void setLanguage(String v) { put("language", v); Ui.applyLanguage(); }
