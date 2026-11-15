@@ -5,13 +5,13 @@
 'use strict';
 var fs = require('fs'), path = require('path'), vm = require('vm');
 
-function prefs(stored, config) {
+function prefs(stored, config, writes) {
   var sandbox = {
     window: {CONFIG: config || {}},
     navigator: {language: 'en-US'},
     localStorage: {
       getItem: function () { return stored === undefined ? null : JSON.stringify(stored); },
-      setItem: function () {}
+      setItem: function (key, value) { if (writes) writes.push({key: key, value: JSON.parse(value)}); }
     },
     I18N: {},
     TV: {zone: function () { return ''; }},
@@ -51,6 +51,18 @@ expect(prefs({liveInput: false, inputsHidden: []}).inputsHidden().join(','), '',
 expect(prefs({inputsHidden: ['hdmi3']}).inputsHidden().join(','), 'hdmi3', 'a hidden input');
 expect(prefs({inputsHidden: 'none'}).inputsHidden().join(','), '', 'hidden inputs that are not a list');
 
+expect(prefs({}).language(), 'auto', 'language follows the TV until picked');
+expect(prefs({language: 'pt-PT'}).language(), 'pt-PT', 'European Portuguese remains selected');
+expect(prefs({language: 'pt-BR'}).language(), 'pt-BR', 'Brazilian Portuguese remains selected');
+expect(prefs({}, {language: 'pt'}).language(), 'pt', 'generic build-time Portuguese stays an alias of pt-PT');
+var portugueseMigrations = [];
+expect(prefs({language: 'pt'}, {language: 'auto'}, portugueseMigrations).language(), 'pt-BR', 'old explicit Portuguese stays Brazilian');
+expect(portugueseMigrations.length, 1, 'legacy Portuguese migrated exactly once');
+expect(portugueseMigrations[0].key, 'fmtv.prefs', 'migration saves to the existing preferences key');
+expect(portugueseMigrations[0].value.language, 'pt-BR', 'migration persists Brazilian code');
+var alreadyUpdated = [];
+expect(prefs({language: 'pt-BR'}, {}, alreadyUpdated).language(), 'pt-BR', 'already migrated language');
+expect(alreadyUpdated.length, 0, 'migration idempotent');
 expect(prefs({}).clockFormat(), 'auto', 'the clock of the language until picked');
 expect(prefs({}, {clockFormat: '24'}).clockFormat(), '24', 'clock_format from the build');
 expect(prefs({clockFormat: '12'}, {clockFormat: '24'}).clockFormat(), '12', 'the choice on the TV wins');

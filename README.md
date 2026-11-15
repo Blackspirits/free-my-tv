@@ -376,7 +376,7 @@ reference (fix them by hand); the others were machine-made, and corrections from
 
 For Portuguese, choose **Português (Portugal)** (`pt-PT`) or **Português (Brasil)** (`pt-BR`).
 *Automatic* uses `pt-BR` on TVs set to Brazil and `pt-PT` in Portugal and other Portuguese-speaking regions.
-An unspecified `pt` (including older saved preferences) now means `pt-PT`; choose `pt-BR` explicitly to keep Brazilian Portuguese. Existing installs are unaffected until a build with this change is installed.
+The generic `pt` code now means `pt-PT`. On upgrade, an **older manually saved `pt` preference** is migrated to `pt-BR` to preserve the user's explicit language choice. TVs set to Automatic use `pt-BR` in Brazil and `pt-PT` in Portugal and other Lusophone regions. GitHub commits do not automatically update installed TVs.
 The existing Brazilian translations have not changed. The new European Portuguese catalogue is a regional draft awaiting full linguistic review.
 The Portuguese-language website at `docs/pt/` remains the Brazilian page, with its existing URL unchanged.
 
